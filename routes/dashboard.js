@@ -24,7 +24,7 @@ router.post('/motor-speed', async (req, res) => {
       return res.status(404).json({ message: 'Dashboard data not found.' });
     }
     dashboard.motorSpeed = speed;
-    dashboard.motorRPM = speed * 500; // Simple calculation to derive RPM from speed
+    dashboard.motorRPM = speed * 200; // Simple calculation to derive RPM from speed
     dashboard.powerConsumption = speed * 25;
     await dashboard.save();
     res.json({ message: 'Motor speed updated' });
@@ -44,7 +44,12 @@ router.post('/charging', async (req, res) => {
     dashboard.isCharging = charging;
     dashboard.motorSpeed = 0; // Disable motor when charging
     dashboard.motorRPM = 0;
-    dashboard.powerConsumption = 0;
+    if (!dashboard.isCharging ){
+      dashboard.powerConsumption = -90;
+    } else {
+      dashboard.powerConsumption = 0;
+    }
+    
     await dashboard.save();
     res.json({ message: 'Charging state updated' });
   } catch (error) {
