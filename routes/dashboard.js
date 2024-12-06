@@ -57,34 +57,4 @@ router.post('/charging', async (req, res) => {
   }
 });
 
-// POST /api/dashboard/battery
-router.post('/battery', async (req, res) => {
-  try {
-    const { batteryPercentage, batteryTemperature } = req.body;
-
-    // Validate the input
-    if (typeof batteryPercentage !== 'number' || typeof batteryTemperature !== 'number') {
-      return res.status(400).json({ message: 'Invalid data types for battery percentage or temperature.' });
-    }
-
-    // Find the dashboard document to update (assuming there's only one)
-    const dashboard = await Dashboard.findOne();
-    if (!dashboard) {
-      return res.status(404).json({ message: 'Dashboard data not found.' });
-    }
-
-    // Update the battery fields
-    dashboard.batteryPercentage = batteryPercentage;
-    dashboard.batteryTemperature = batteryTemperature;
-
-    // Save the updated document
-    await dashboard.save();
-
-    res.status(200).json({ message: 'Battery information updated successfully.' });
-  } catch (error) {
-    console.error('Error updating battery information:', error);
-    res.status(500).json({ message: 'Internal server error.' });
-  }
-});
-
 module.exports = router;
