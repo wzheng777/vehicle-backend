@@ -2,6 +2,40 @@ const express = require('express');
 const router = express.Router();
 const Dashboard = require('../models/Dashboard');
 
+// Function to simulate battery percentage
+const simulateBatteryPercentage = async () => {
+  try {
+    const dashboard = await Dashboard.findOne();
+    if (dashboard) {
+      if (!dashboard.isCharging) {
+        dashboard.batteryPercentage = Math.min(dashboard.batteryPercentage + 1, 100); // Increase while charging
+      } else if (dashboard.motorSpeed > 0) {
+        dashboard.batteryPercentage = Math.max(dashboard.batteryPercentage - 1, 0); // Decrease when motor is in use
+      }
+      await dashboard.save();
+    }
+  } catch (error) {
+    console.error('Error simulating battery percentage:', error);
+  }
+};
+
+// Function to simulate battery temperature
+const simulateBatteryTemperature = async () => {
+  try {
+    const dashboard = await Dashboard.findOne();
+    if (dashboard) {
+      dashboard.batteryTemperature = Math.min(20 + dashboard.motorSpeed * 5, 100); // Increase temperature based on motor speed
+      await dashboard.save();
+    }
+  } catch (error) {
+    console.error('Error simulating battery temperature:', error);
+  }
+};
+
+// Run battery simulation periodically
+setInterval(simulateBatteryPercentage, 1000); // Run every 1 seconds
+setInterval(simulateBatteryTemperature, 1000); // Run every 1 seconds
+
 // GET - Get Dashboard Data
 router.get('/', async (req, res) => {
   try {
@@ -44,12 +78,11 @@ router.post('/charging', async (req, res) => {
     dashboard.isCharging = charging;
     dashboard.motorSpeed = 0; // Disable motor when charging
     dashboard.motorRPM = 0;
-    if (!dashboard.isCharging ){
+    if (!dashboard.isCharging) {
       dashboard.powerConsumption = -90;
     } else {
       dashboard.powerConsumption = 0;
     }
-    
     await dashboard.save();
     res.json({ message: 'Charging state updated' });
   } catch (error) {
@@ -58,3 +91,4 @@ router.post('/charging', async (req, res) => {
 });
 
 module.exports = router;
+
