@@ -7,10 +7,17 @@ const simulateBatteryPercentage = async () => {
   try {
     const dashboard = await Dashboard.findOne();
     if (dashboard) {
-      if (!dashboard.isCharging) {
+      if (dashboard.isCharging) {
         dashboard.batteryPercentage = Math.min(dashboard.batteryPercentage + 1, 100); // Increase while charging
       } else if (dashboard.motorSpeed > 0) {
         dashboard.batteryPercentage = Math.max(dashboard.batteryPercentage - 1, 0); // Decrease when motor is in use
+        
+      }
+      if (dashboard.batteryPercentage <= 20) {
+        dashboard.indicators.batteryLow = true;
+      }
+      else {
+        dashboard.indicators.batteryLow = false;
       }
       await dashboard.save();
     }
@@ -78,17 +85,20 @@ router.post('/charging', async (req, res) => {
     dashboard.isCharging = charging;
     dashboard.motorSpeed = 0; // Disable motor when charging
     dashboard.motorRPM = 0;
-    if (!dashboard.isCharging) {
+    if (dashboard.isCharging) {
       dashboard.powerConsumption = -90;
     } else {
       dashboard.powerConsumption = 0;
     }
     await dashboard.save();
-    res.json({ message: 'Charging state updated' });
+
+    // Return the updated dashboard object
+    res.json(dashboard);
   } catch (error) {
     res.status(500).json({ message: 'Error updating charging state' });
   }
 });
+
 
 module.exports = router;
 
